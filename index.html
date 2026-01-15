@@ -2,12 +2,151 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>前台首页</title>
-</head>
-<body style="background:#111;color:#fff;padding:40px">
-  <h1>前台首页已加载成功</h1>
-  <p>域名：c.dttg.de5.net</p>
+  <title>留言联系</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <a href="/admin/" style="color:#ffd54f">进入后台</a>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont;
+      background: radial-gradient(circle at top, #1a1a1a, #000);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: #121212;
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+    }
+
+    h1 {
+      text-align: center;
+      margin: 0 0 20px;
+      font-size: 22px;
+    }
+
+    label {
+      font-size: 14px;
+      opacity: .85;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      margin-top: 6px;
+      margin-bottom: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+    }
+
+    input, textarea {
+      background: #1f1f1f;
+      color: #fff;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    button {
+      background: #f5c84b;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .msg {
+      text-align: center;
+      font-size: 14px;
+      min-height: 18px;
+    }
+
+    .error { color: #ff6b6b; }
+    .success { color: #4caf50; }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>📩 留言联系</h1>
+
+    <label>昵称（可选）</label>
+    <input id="name" placeholder="匿名用户" />
+
+    <label>留言内容</label>
+    <textarea id="content" placeholder="请输入你的留言内容"></textarea>
+
+    <button id="submit">提交留言</button>
+
+    <div class="msg" id="msg"></div>
+  </div>
+
+<script>
+  const API = "https://api.dttg.de5.net/api/message"
+
+  const btn = document.getElementById("submit")
+  const msg = document.getElementById("msg")
+
+  btn.onclick = async () => {
+    const name = document.getElementById("name").value.trim()
+    const content = document.getElementById("content").value.trim()
+
+    msg.textContent = ""
+    msg.className = "msg"
+
+    if (!content) {
+      msg.textContent = "❌ 留言内容不能为空"
+      msg.classList.add("error")
+      return
+    }
+
+    btn.disabled = true
+    btn.textContent = "提交中..."
+
+    try {
+      const res = await fetch(API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name, content })
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || "提交失败")
+      }
+
+      msg.textContent = "✅ 留言已提交，我们会尽快联系你"
+      msg.classList.add("success")
+
+      document.getElementById("content").value = ""
+    } catch (err) {
+      msg.textContent = "❌ " + err.message
+      msg.classList.add("error")
+    } finally {
+      btn.disabled = false
+      btn.textContent = "提交留言"
+    }
+  }
+</script>
 </body>
 </html>
