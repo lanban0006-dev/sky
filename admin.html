@@ -1,115 +1,75 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
-<meta charset="UTF-8" />
-<title>模块管理后台</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<title>后台模块管理</title>
 <style>
-body {
-  margin: 0;
-  background: #0f1115;
-  color: #fff;
-  font-family: system-ui;
-}
-.wrap {
-  max-width: 480px;
-  margin: 40px auto;
-  padding: 20px;
-}
-h1 {
-  font-size: 18px;
-  margin-bottom: 20px;
-}
-.card {
-  background: #181b20;
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-button {
-  padding: 6px 14px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  background: #f6c343;
-  font-weight: bold;
-}
-.off {
-  background: #444;
-  color: #aaa;
-}
-.msg {
-  text-align: center;
-  font-size: 13px;
-  color: #aaa;
-  margin-top: 10px;
-}
+body { background:#111;color:#fff;font-family:sans-serif }
+.box { width:360px;margin:80px auto;padding:20px;background:#1e1e1e;border-radius:8px }
+button { width:100%;padding:10px;margin-top:10px }
+label { display:flex;justify-content:space-between;margin:10px 0 }
 </style>
 </head>
 <body>
 
-<div class="wrap">
-  <h1>🧩 模块管理后台</h1>
+<div class="box" id="login">
+  <h3>TG 验证登录</h3>
+  <button onclick="sendCode()">发送验证码到 TG</button>
+  <input id="code" placeholder="输入 TG 验证码">
+  <button onclick="verify()">登录</button>
+</div>
 
-  <div class="card">
-    <span>留言模块</span>
-    <button id="msgBtn" onclick="toggle('message')">加载中</button>
-  </div>
+<div class="box" id="panel" style="display:none">
+  <h3>模块管理</h3>
 
-  <div class="card">
-    <span>首页展示</span>
-    <button id="homeBtn" onclick="toggle('home')">加载中</button>
-  </div>
+  <label>留言模块 <input type="checkbox" id="message"></label>
+  <label>TG 通知 <input type="checkbox" id="telegram"></label>
+  <label>首页展示 <input type="checkbox" id="home"></label>
 
-  <div class="card">
-    <span>TG 通知</span>
-    <button id="tgBtn" onclick="toggle('telegram')">加载中</button>
-  </div>
-
-  <div class="msg" id="msg"></div>
+  <button onclick="save()">保存</button>
 </div>
 
 <script>
-const API = "https://api.dttg.de5.net";
+const API = "https://api.dttg.de5.net"
 
-function show(t){ document.getElementById("msg").innerText = t }
-
-async function authCheck() {
-  const r = await fetch(API + "/api/admin/me", { credentials: "include" });
-  if (!r.ok) location.href = "/login.html";
+function sendCode() {
+  fetch(API + "/api/admin/login", { method:"POST" })
+    .then(()=>alert("验证码已发送到 TG"))
 }
 
-async function load() {
-  const r = await fetch(API + "/api/admin/modules");
-  const d = await r.json();
-  setBtn("message", d.message);
-  setBtn("home", d.home);
-  setBtn("telegram", d.telegram);
+function verify() {
+  fetch(API + "/api/admin/verify", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ code: code.value })
+  }).then(r=>{
+    if(!r.ok) return alert("验证码错误")
+    login.style.display="none"
+    panel.style.display="block"
+    load()
+  })
 }
 
-function setBtn(k, v) {
-  const m = { message: "msgBtn", home: "homeBtn", telegram: "tgBtn" };
-  const b = document.getElementById(m[k]);
-  b.innerText = v ? "已开启" : "已关闭";
-  b.className = v ? "" : "off";
+function load() {
+  fetch(API + "/api/modules")
+    .then(r=>r.json())
+    .then(m=>{
+      message.checked = m.message
+      telegram.checked = m.telegram
+      home.checked = m.home
+    })
 }
 
-async function toggle(k) {
-  const r = await fetch(API + "/api/admin/module-toggle", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ key: k })
-  });
-  const d = await r.json();
-  show("已更新");
-  setBtn(k, d.enabled);
+function save() {
+  ["message","telegram","home"].forEach(k=>{
+    fetch(API + "/api/admin/module",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ key:k, value:document.getElementById(k).checked })
+    })
+  })
+  alert("已保存")
 }
-
-authCheck();
-load();
 </script>
 
 </body>
