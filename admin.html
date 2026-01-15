@@ -1,56 +1,116 @@
-<h2>模块管理</h2>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>模块管理后台</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+body {
+  margin: 0;
+  background: #0f1115;
+  color: #fff;
+  font-family: system-ui;
+}
+.wrap {
+  max-width: 480px;
+  margin: 40px auto;
+  padding: 20px;
+}
+h1 {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+.card {
+  background: #181b20;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #f6c343;
+  font-weight: bold;
+}
+.off {
+  background: #444;
+  color: #aaa;
+}
+.msg {
+  text-align: center;
+  font-size: 13px;
+  color: #aaa;
+  margin-top: 10px;
+}
+</style>
+</head>
+<body>
 
-<input id="title" placeholder="模块标题">
-<textarea id="content" placeholder="模块内容"></textarea>
-<button onclick="add()">新增模块</button>
+<div class="wrap">
+  <h1>🧩 模块管理后台</h1>
 
-<ul id="list"></ul>
+  <div class="card">
+    <span>留言模块</span>
+    <button id="msgBtn" onclick="toggle('message')">加载中</button>
+  </div>
+
+  <div class="card">
+    <span>首页展示</span>
+    <button id="homeBtn" onclick="toggle('home')">加载中</button>
+  </div>
+
+  <div class="card">
+    <span>TG 通知</span>
+    <button id="tgBtn" onclick="toggle('telegram')">加载中</button>
+  </div>
+
+  <div class="msg" id="msg"></div>
+</div>
 
 <script>
-const API = "https://api.dttg.de5.net"
-const TOKEN = localStorage.getItem("admin_token")
+const API = "https://api.dttg.de5.net";
+
+function show(t){ document.getElementById("msg").innerText = t }
+
+async function authCheck() {
+  const r = await fetch(API + "/api/admin/me", { credentials: "include" });
+  if (!r.ok) location.href = "/login.html";
+}
 
 async function load() {
-  const res = await fetch(API + "/api/admin/modules", {
-    headers: { "X-Admin-Token": TOKEN }
-  })
-  const data = await res.json()
-  const ul = document.getElementById("list")
-  ul.innerHTML = ""
-
-  data.forEach(m => {
-    const li = document.createElement("li")
-    li.innerHTML = `
-      <b>${m.title}</b>
-      <button onclick="del('${m.id}')">删除</button>
-    `
-    ul.appendChild(li)
-  })
+  const r = await fetch(API + "/api/admin/modules");
+  const d = await r.json();
+  setBtn("message", d.message);
+  setBtn("home", d.home);
+  setBtn("telegram", d.telegram);
 }
 
-async function add() {
-  const title = document.getElementById("title").value
-  const content = document.getElementById("content").value
+function setBtn(k, v) {
+  const m = { message: "msgBtn", home: "homeBtn", telegram: "tgBtn" };
+  const b = document.getElementById(m[k]);
+  b.innerText = v ? "已开启" : "已关闭";
+  b.className = v ? "" : "off";
+}
 
-  await fetch(API + "/api/admin/module", {
+async function toggle(k) {
+  const r = await fetch(API + "/api/admin/module-toggle", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Admin-Token": TOKEN
-    },
-    body: JSON.stringify({ title, content })
-  })
-
-  load()
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key: k })
+  });
+  const d = await r.json();
+  show("已更新");
+  setBtn(k, d.enabled);
 }
 
-async function del(id) {
-  await fetch(API + "/api/admin/module/" + id, {
-    method: "DELETE",
-    headers: { "X-Admin-Token": TOKEN }
-  })
-  load()
-}
-
-load()
+authCheck();
+load();
 </script>
+
+</body>
+</html>
