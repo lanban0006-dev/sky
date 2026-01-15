@@ -1,81 +1,135 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title>后台登录</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>后台登录（TG 验证）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
-      background: #111;
+      background: #0f1115;
       color: #fff;
-      font-family: system-ui;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont;
       display: flex;
       align-items: center;
       justify-content: center;
       height: 100vh;
+      margin: 0;
     }
     .box {
-      background: #1c1c1c;
+      width: 360px;
+      background: #181b20;
       padding: 24px;
       border-radius: 10px;
-      width: 300px;
+      box-shadow: 0 0 20px rgba(0,0,0,.4);
+    }
+    h1 {
+      font-size: 18px;
+      margin-bottom: 16px;
+      text-align: center;
     }
     input, button {
       width: 100%;
-      padding: 10px;
-      margin-top: 10px;
+      padding: 12px;
       border-radius: 6px;
       border: none;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    input {
+      background: #0f1115;
+      color: #fff;
+      border: 1px solid #333;
     }
     button {
-      background: #facc15;
-      font-weight: bold;
+      background: #f6c343;
+      color: #000;
       cursor: pointer;
+      font-weight: bold;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .msg {
+      text-align: center;
+      font-size: 13px;
+      color: #aaa;
+      min-height: 18px;
     }
   </style>
 </head>
 <body>
 
 <div class="box">
-  <h3>🔐 后台登录</h3>
+  <h1>🔐 后台登录（TG 验证）</h1>
 
-  <button onclick="sendCode()">📨 发送验证码到 TG</button>
+  <button id="sendBtn" onclick="sendCode()">发送验证码到 TG</button>
 
-  <input id="code" placeholder="输入 TG 收到的验证码">
-  <button onclick="login()">登录</button>
+  <input
+    id="code"
+    placeholder="请输入 TG 收到的 6 位验证码"
+    maxlength="6"
+  />
 
-  <p id="msg"></p>
+  <button onclick="login()">登录后台</button>
+
+  <div class="msg" id="msg"></div>
 </div>
 
 <script>
-const API = "https://api.dttg.de5.net";
+  const API = "https://api.dttg.de5.net";
 
-async function sendCode() {
-  const res = await fetch(API + "/api/admin/send-code", {
-    method: "POST"
-  });
-  document.getElementById("msg").innerText = "验证码已发送到 TG";
-}
-
-async function login() {
-  const code = document.getElementById("code").value.trim();
-  if (!code) return alert("请输入验证码");
-
-  const res = await fetch(API + "/api/admin/verify-code", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code })
-  });
-
-  const data = await res.json();
-  if (!data.ok) {
-    alert(data.error || "登录失败");
-    return;
+  function show(msg) {
+    document.getElementById("msg").innerText = msg;
   }
 
-  localStorage.setItem("admin_token", data.token);
-  location.href = "/admin/index.html";
-}
+  async function sendCode() {
+    show("正在发送验证码...");
+    document.getElementById("sendBtn").disabled = true;
+
+    try {
+      const res = await fetch(API + "/api/admin/send-code");
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "发送失败");
+
+      show("验证码已发送到你的 Telegram");
+    } catch (e) {
+      show("发送失败：" + e.message);
+      document.getElementById("sendBtn").disabled = false;
+    }
+  }
+
+  async function login() {
+    const code = document.getElementById("code").value.trim();
+    if (!code) {
+      show("请输入验证码");
+      return;
+    }
+
+    show("正在验证...");
+
+    try {
+      const res = await fetch(API + "/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "登录失败");
+
+      show("登录成功，正在进入后台...");
+      setTimeout(() => {
+        // 👉 登录成功后跳转的页面
+        window.location.href = "/admin/index.html";
+      }, 800);
+
+    } catch (e) {
+      show("登录失败：" + e.message);
+    }
+  }
 </script>
 
 </body>
