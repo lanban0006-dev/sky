@@ -1,20 +1,13 @@
-<div id="modules"></div>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>前台首页</title>
+</head>
+<body style="background:#111;color:#fff;padding:40px">
+  <h1>前台首页已加载成功</h1>
+  <p>域名：c.dttg.de5.net</p>
 
-<script>
-const API = "https://api.dttg.de5.net"
-
-async function loadModules() {
-  const res = await fetch(API + "/api/modules")
-  const modules = await res.json()
-  const box = document.getElementById("modules")
-  box.innerHTML = ""
-
-  modules.forEach(m => {
-    const div = document.createElement("div")
-    div.innerHTML = `<h2>${m.title}</h2><p>${m.content}</p>`
-    box.appendChild(div)
-  })
-}
-
-loadModules()
-</script>
+  <a href="/admin/" style="color:#ffd54f">进入后台</a>
+</body>
+</html>
