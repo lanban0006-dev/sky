@@ -1,0 +1,97 @@
+<h1 style="color:red">这是新的后台页面</h1>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>后台管理 - 留言列表</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    .login, .panel {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    .msg {
+      border-bottom: 1px solid #eee;
+      padding: 10px 0;
+    }
+    .time {
+      color: #888;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>后台管理</h1>
+
+<div class="login" id="login">
+  <input id="password" type="password" placeholder="请输入后台密码">
+  <button onclick="login()">进入后台</button>
+</div>
+
+<div class="panel" id="panel" style="display:none">
+  <button onclick="loadMessages()">🔄 刷新留言</button>
+  <div id="list"></div>
+</div>
+
+<script>
+const API = "https://api.dttg.de5.net/api/admin/messages"
+let adminPassword = ""
+
+function login() {
+  adminPassword = document.getElementById("password").value
+  loadMessages()
+}
+
+async function loadMessages() {
+  const res = await fetch(API, {
+    headers: {
+      "x-admin-password": adminPassword
+    }
+  })
+
+  if (res.status === 401) {
+    alert("密码错误")
+    return
+  }
+
+  const data = await res.json()
+  document.getElementById("login").style.display = "none"
+  document.getElementById("panel").style.display = "block"
+
+  const list = document.getElementById("list")
+  list.innerHTML = ""
+
+  data.messages.forEach(m => {
+    const div = document.createElement("div")
+    div.className = "msg"
+    div.innerHTML = `
+      <div><b>${m.name}</b></div>
+      <div>${m.content}</div>
+      <div class="time">${m.time}</div>
+    `
+    list.appendChild(div)
+  })
+}
+</script>
+
+</body>
+</html>
