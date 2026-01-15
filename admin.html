@@ -5,19 +5,49 @@
   <title>后台管理</title>
 </head>
 <body>
-  <h1>后台管理</h1>
-
-  <button onclick="logout()">退出</button>
+  <h1>留言管理</h1>
+  <button onclick="load()">刷新</button>
+  <ul id="list"></ul>
 
   <script>
-    if (!localStorage.getItem('admin_login')) {
-      location.href = '/login.html'
+    const API = "https://api.dttg.de5.net"
+    const TOKEN = "lanban0006_admin_2026" // 必须和 Worker 一致
+
+    async function load() {
+      const res = await fetch(API + "/api/admin/messages", {
+        headers: {
+          "X-Admin-Token": TOKEN
+        }
+      })
+      const data = await res.json()
+
+      const ul = document.getElementById("list")
+      ul.innerHTML = ""
+
+      data.forEach(m => {
+        const li = document.createElement("li")
+        li.innerHTML = `
+          <b>${m.name}</b>：
+          ${m.content}
+          <button onclick="del('${m.id}')">删除</button>
+        `
+        ul.appendChild(li)
+      })
     }
 
-    function logout() {
-      localStorage.removeItem('admin_login')
-      location.href = '/login.html'
+    async function del(id) {
+      if (!confirm("确认删除？")) return
+
+      await fetch(API + "/api/admin/message/" + id, {
+        method: "DELETE",
+        headers: {
+          "X-Admin-Token": TOKEN
+        }
+      })
+      load()
     }
+
+    load()
   </script>
 </body>
 </html>
