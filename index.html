@@ -1,91 +1,20 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8" />
-<title>留言联系</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>
-body {
-  background:#0f0f12;
-  color:#fff;
-  font-family: system-ui;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-}
-.box {
-  width:360px;
-  background:#1b1b22;
-  padding:24px;
-  border-radius:12px;
-}
-h1 {
-  text-align:center;
-  margin-bottom:20px;
-}
-input, textarea, button {
-  width:100%;
-  margin-top:12px;
-  padding:10px;
-  border-radius:8px;
-  border:none;
-}
-input, textarea {
-  background:#111;
-  color:#fff;
-}
-button {
-  background:#f5c84c;
-  color:#000;
-  font-size:16px;
-  cursor:pointer;
-}
-</style>
-</head>
-<body>
-
-<div class="box">
-  <h1>留言联系</h1>
-
-  <input id="name" placeholder="昵称（可选）" />
-  <textarea id="message" rows="5" placeholder="请输入你的留言内容"></textarea>
-  <button onclick="send()">提交留言</button>
-</div>
+<div id="modules"></div>
 
 <script>
-async function send() {
-  const name = document.getElementById("name").value;
-  const message = document.getElementById("message").value;
+const API = "https://api.dttg.de5.net"
 
-  if (!message.trim()) {
-    alert("留言内容不能为空");
-    return;
-  }
+async function loadModules() {
+  const res = await fetch(API + "/api/modules")
+  const modules = await res.json()
+  const box = document.getElementById("modules")
+  box.innerHTML = ""
 
-  try {
-    const res = await fetch("https://api.dttg.de5.net/api/message", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: name,
-        message: message
-      })
-    });
-
-    const data = await res.json();
-
-    if (data.ok) {
-      alert("提交成功");
-      document.getElementById("message").value = "";
-    } else {
-      alert(data.error || "提交失败");
-    }
-  } catch (e) {
-    alert("网络错误");
-  }
+  modules.forEach(m => {
+    const div = document.createElement("div")
+    div.innerHTML = `<h2>${m.title}</h2><p>${m.content}</p>`
+    box.appendChild(div)
+  })
 }
-</script>
 
-</body>
-</html>
+loadModules()
+</script>

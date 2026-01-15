@@ -1,54 +1,56 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <title>后台管理</title>
-</head>
-<body>
-  <h1>留言管理</h1>
-  <button onclick="load()">刷新</button>
-  <ul id="list"></ul>
+<h2>模块管理</h2>
 
-  <script>
-    const API = "https://api.dttg.de5.net"
-    const TOKEN = localStorage.getItem("admin_token")
+<input id="title" placeholder="模块标题">
+<textarea id="content" placeholder="模块内容"></textarea>
+<button onclick="add()">新增模块</button>
 
+<ul id="list"></ul>
 
-    async function load() {
-      const res = await fetch(API + "/api/admin/messages", {
-        headers: {
-          "X-Admin-Token": TOKEN
-        }
-      })
-      const data = await res.json()
+<script>
+const API = "https://api.dttg.de5.net"
+const TOKEN = localStorage.getItem("admin_token")
 
-      const ul = document.getElementById("list")
-      ul.innerHTML = ""
+async function load() {
+  const res = await fetch(API + "/api/admin/modules", {
+    headers: { "X-Admin-Token": TOKEN }
+  })
+  const data = await res.json()
+  const ul = document.getElementById("list")
+  ul.innerHTML = ""
 
-      data.forEach(m => {
-        const li = document.createElement("li")
-        li.innerHTML = `
-          <b>${m.name}</b>：
-          ${m.content}
-          <button onclick="del('${m.id}')">删除</button>
-        `
-        ul.appendChild(li)
-      })
-    }
+  data.forEach(m => {
+    const li = document.createElement("li")
+    li.innerHTML = `
+      <b>${m.title}</b>
+      <button onclick="del('${m.id}')">删除</button>
+    `
+    ul.appendChild(li)
+  })
+}
 
-    async function del(id) {
-      if (!confirm("确认删除？")) return
+async function add() {
+  const title = document.getElementById("title").value
+  const content = document.getElementById("content").value
 
-      await fetch(API + "/api/admin/message/" + id, {
-        method: "DELETE",
-        headers: {
-          "X-Admin-Token": TOKEN
-        }
-      })
-      load()
-    }
+  await fetch(API + "/api/admin/module", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Admin-Token": TOKEN
+    },
+    body: JSON.stringify({ title, content })
+  })
 
-    load()
-  </script>
-</body>
-</html>
+  load()
+}
+
+async function del(id) {
+  await fetch(API + "/api/admin/module/" + id, {
+    method: "DELETE",
+    headers: { "X-Admin-Token": TOKEN }
+  })
+  load()
+}
+
+load()
+</script>
