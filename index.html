@@ -1,76 +1,159 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<title>留言联系</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>
-body {
-  background:#0f1115;
-  color:#fff;
-  font-family:system-ui;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-}
-.box {
-  width:100%;
-  max-width:420px;
-  background:#161a22;
-  padding:24px;
-  border-radius:12px;
-}
-input, textarea, button {
-  width:100%;
-  padding:12px;
-  margin-top:12px;
-  border-radius:8px;
-  border:none;
-}
-input, textarea {
-  background:#0f1115;
-  color:#fff;
-}
-button {
-  background:#f5c84c;
-  font-weight:bold;
-  cursor:pointer;
-}
-</style>
-</head>
-<body>
+  <meta charset="UTF-8" />
+  <title>个人网站</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<div class="box">
-  <h2>留言联系</h2>
-  <input id="name" placeholder="昵称（可选）" />
-  <textarea id="message" rows="5" placeholder="请输入留言内容"></textarea>
-  <button onclick="submitMsg()">提交留言</button>
-</div>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont;
+      background: linear-gradient(120deg, #0f0f0f, #1a1a1a);
+      color: #fff;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 60px auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: #181818;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 0 20px rgba(0,0,0,.4);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 26px;
+    }
+
+    p {
+      opacity: .85;
+      line-height: 1.6;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      margin-top: 10px;
+      font-size: 15px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    button {
+      background: #f5c542;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #ffd966;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .center {
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- 首页内容 -->
+    <div id="home-box" class="card hidden">
+      <h1>欢迎访问 👋</h1>
+      <p>
+        这是我的个人网站。<br>
+        你可以在这里留言联系我，或查看本站功能状态。
+      </p>
+    </div>
+
+    <!-- 维护提示 -->
+    <div id="maintenance-box" class="card hidden center">
+      <h1>🚧 网站维护中</h1>
+      <p>当前首页模块已关闭，请稍后再访问。</p>
+    </div>
+
+    <!-- 留言模块 -->
+    <div id="message-box" class="card hidden">
+      <h1>留言联系</h1>
+
+      <input id="nickname" placeholder="昵称（可选）" />
+      <textarea id="content" placeholder="请输入你的留言内容"></textarea>
+
+      <button onclick="submitMessage()">提交留言</button>
+    </div>
+
+  </div>
 
 <script>
-async function submitMsg() {
-  const name = document.getElementById('name').value.trim();
-  const message = document.getElementById('message').value.trim();
+const API_BASE = "https://api.dttg.de5.net"
 
-  if (!message) {
-    alert('留言不能为空');
-    return;
+// 加载模块状态
+fetch(API_BASE + "/api/modules")
+  .then(res => res.json())
+  .then(mod => {
+
+    // 首页模块
+    if (mod.home) {
+      document.getElementById("home-box").classList.remove("hidden")
+    } else {
+      document.getElementById("maintenance-box").classList.remove("hidden")
+      return
+    }
+
+    // 留言模块
+    if (mod.message) {
+      document.getElementById("message-box").classList.remove("hidden")
+    }
+
+  })
+  .catch(() => {
+    document.getElementById("maintenance-box").classList.remove("hidden")
+  })
+
+
+// 提交留言
+function submitMessage() {
+  const nickname = document.getElementById("nickname").value.trim()
+  const content = document.getElementById("content").value.trim()
+
+  if (!content) {
+    alert("留言内容不能为空")
+    return
   }
 
-  const res = await fetch('https://api.dttg.de5.net/api/message', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      name,
-      message
-    })
-  });
-
-  const data = await res.json();
-  alert(data.msg || '已提交');
+  fetch(API_BASE + "/api/message", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nickname, content })
+  })
+  .then(res => res.json())
+  .then(res => {
+    if (res.success) {
+      alert("留言已提交")
+      document.getElementById("content").value = ""
+    } else {
+      alert(res.error || "提交失败")
+    }
+  })
+  .catch(() => alert("网络错误"))
 }
 </script>
 
