@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>在线留言</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {
+  background:#0f0f0f;
+  color:#fff;
+  font-family:system-ui;
+  margin:0;
+}
+.chat {
+  max-width:600px;
+  margin:auto;
+  padding:20px;
+}
+.msg {
+  margin:10px 0;
+  padding:10px 14px;
+  border-radius:12px;
+  max-width:80%;
+}
+.user { background:#2a82f0; margin-left:auto; }
+.admin { background:#333; }
+.input {
+  display:flex;
+  gap:10px;
+  position:fixed;
+  bottom:0;
+  width:100%;
+  max-width:600px;
+  background:#111;
+  padding:10px;
+}
+input {
+  flex:1;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+}
+button {
+  background:#f5c542;
+  border:none;
+  padding:10px 16px;
+  border-radius:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="chat" id="chat"></div>
+
+<div class="input">
+  <input id="text" placeholder="输入消息">
+  <button onclick="send()">发送</button>
+</div>
+
+<script>
+const API = "https://api.dttg.de5.net"
+const sessionId = Math.random().toString(36).slice(2)
+
+function render(msgs) {
+  const box = document.getElementById("chat")
+  box.innerHTML = ""
+  msgs.forEach(m => {
+    const d = document.createElement("div")
+    d.className = "msg " + m.from
+    d.textContent = m.text
+    box.appendChild(d)
+  })
+  window.scrollTo(0, document.body.scrollHeight)
+}
+
+function poll() {
+  fetch(API + "/api/chat/poll?sessionId=" + sessionId)
+    .then(r => r.json())
+    .then(d => render(d.messages))
+}
+setInterval(poll, 2000)
+
+function send() {
+  const text = document.getElementById("text").value.trim()
+  if (!text) return
+
+  fetch(API + "/api/chat/send", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ sessionId, text })
+  })
+
+  document.getElementById("text").value = ""
+}
+</script>
+
+</body>
+</html>
