@@ -3,61 +3,64 @@
 <head>
 <meta charset="UTF-8" />
 <title>后台登录</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-body { font-family: system-ui; background:#f5f5f5; padding:30px }
-.box { max-width:400px; margin:auto; background:#fff; padding:20px; border-radius:8px }
-input, button { width:100%; padding:10px; margin-top:10px }
+body {
+  background:#0f0f12;
+  color:#fff;
+  font-family: system-ui;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.box {
+  width:320px;
+  background:#1b1b22;
+  padding:24px;
+  border-radius:12px;
+}
+h2 {
+  text-align:center;
+}
+input, button {
+  width:100%;
+  margin-top:14px;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+}
+input {
+  background:#111;
+  color:#fff;
+}
+button {
+  background:#4caf50;
+  color:#000;
+  font-size:16px;
+}
 </style>
 </head>
 <body>
 
-<div class="box" id="loginBox">
+<div class="box">
   <h2>后台登录</h2>
-  <input id="pwd" type="password" placeholder="后台密码">
-  <button onclick="login()">登录</button>
-  <p id="err" style="color:red"></p>
-</div>
 
-<div class="box" id="panel" style="display:none">
-  <h2>留言列表</h2>
-  <ul id="list"></ul>
+  <input id="password" type="password" placeholder="请输入后台密码" />
+  <button onclick="login()">登录</button>
 </div>
 
 <script>
-const API = "https://api.dttg.de5.net"
+const ADMIN_PASSWORD = "aa168168"; // ← 你自己改
 
-async function login() {
-  const password = document.getElementById("pwd").value
-  const res = await fetch(API + "/api/admin/login", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ password })
-  })
-  const data = await res.json()
-  if (!data.token) {
-    document.getElementById("err").innerText = data.error
-    return
+function login() {
+  const pwd = document.getElementById("password").value;
+
+  if (pwd === ADMIN_PASSWORD) {
+    alert("登录成功（下一步做管理页面）");
+  } else {
+    alert("密码错误");
   }
-  localStorage.token = data.token
-  loadMessages()
-}
-
-async function loadMessages() {
-  document.getElementById("loginBox").style.display = "none"
-  document.getElementById("panel").style.display = "block"
-
-  const res = await fetch(API + "/api/admin/messages", {
-    headers:{ "Authorization":"Bearer " + localStorage.token }
-  })
-  const data = await res.json()
-
-  const ul = document.getElementById("list")
-  ul.innerHTML = ""
-  data.forEach(m=>{
-    const li = document.createElement("li")
-    li.innerText = `${m.time} | ${m.name}：${m.content}`
-    ul.appendChild(li)
-  })
 }
 </script>
 
