@@ -105,12 +105,11 @@
 <script>
 const API_BASE = "https://api.dttg.de5.net"
 
-// 加载模块状态
+// 加载模块状态（原逻辑不动）
 fetch(API_BASE + "/api/modules")
   .then(res => res.json())
   .then(mod => {
 
-    // 首页模块
     if (mod.home) {
       document.getElementById("home-box").classList.remove("hidden")
     } else {
@@ -118,7 +117,6 @@ fetch(API_BASE + "/api/modules")
       return
     }
 
-    // 留言模块
     if (mod.message) {
       document.getElementById("message-box").classList.remove("hidden")
     }
@@ -129,7 +127,7 @@ fetch(API_BASE + "/api/modules")
   })
 
 
-// 提交留言
+// ⭐ 提交留言（新增：成功后跳转对话页）
 function submitMessage() {
   const nickname = document.getElementById("nickname").value.trim()
   const content = document.getElementById("content").value.trim()
@@ -142,13 +140,15 @@ function submitMessage() {
   fetch(API_BASE + "/api/message", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nickname, content })
+    body: JSON.stringify({ name: nickname, content })
   })
   .then(res => res.json())
   .then(res => {
-    if (res.success) {
-      alert("留言已提交")
-      document.getElementById("content").value = ""
+    if (res.success && res.chatId) {
+
+      // ✅ 核心新增：跳转到临时聊天窗口
+      location.href = `/chat?chatId=${res.chatId}`
+
     } else {
       alert(res.error || "提交失败")
     }
