@@ -3,40 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <title>后台登录</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: system-ui;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .box {
+      background: #1c1c1c;
+      padding: 24px;
+      border-radius: 10px;
+      width: 300px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: none;
+    }
+    button {
+      background: #facc15;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <h2>后台登录（Telegram）</h2>
 
-  <button onclick="send()">获取验证码</button>
-  <br><br>
+<div class="box">
+  <h3>🔐 后台登录</h3>
 
-  <input id="code" placeholder="输入 TG 验证码">
-  <button onclick="verify()">登录</button>
+  <button onclick="sendCode()">📨 发送验证码到 TG</button>
 
-  <script>
-    const API = "https://api.dttg.de5.net"
+  <input id="code" placeholder="输入 TG 收到的验证码">
+  <button onclick="login()">登录</button>
 
-    async function send() {
-      await fetch(API + "/api/admin/login", { method: "POST" })
-      alert("验证码已发送到你的 TG")
-    }
+  <p id="msg"></p>
+</div>
 
-    async function verify() {
-      const code = document.getElementById("code").value
-      const res = await fetch(API + "/api/admin/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code })
-      })
-      const data = await res.json()
+<script>
+const API = "https://api.dttg.de5.net";
 
-      if (data.token) {
-        localStorage.setItem("admin_token", data.token)
-        location.href = "/admin.html"
-      } else {
-        alert(data.error)
-      }
-    }
-  </script>
+async function sendCode() {
+  const res = await fetch(API + "/api/admin/send-code", {
+    method: "POST"
+  });
+  document.getElementById("msg").innerText = "验证码已发送到 TG";
+}
+
+async function login() {
+  const code = document.getElementById("code").value.trim();
+  if (!code) return alert("请输入验证码");
+
+  const res = await fetch(API + "/api/admin/verify-code", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code })
+  });
+
+  const data = await res.json();
+  if (!data.ok) {
+    alert(data.error || "登录失败");
+    return;
+  }
+
+  localStorage.setItem("admin_token", data.token);
+  location.href = "/admin/index.html";
+}
+</script>
+
 </body>
 </html>
